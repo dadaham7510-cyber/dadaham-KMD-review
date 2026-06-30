@@ -1,0 +1,545 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><script>
+(function(){
+  var __k="2d3a1db0-bf6c-40c0-bbd8-dda10ecf9e1f";
+  var __a=null;
+  var __preload=null;
+  if(!__k)return;
+  var _f=window.fetch;
+  // S3 URL → file_key 추출 후 __a 매핑 lookup → assets/ 로컬 경로 치환
+  // 응답에 새 signed URL이 와도 같은 file_key면 같은 assets/ → 영구 작동
+  function patchUrls(data){
+    if(!__a)return data;
+    try{
+      var s=JSON.stringify(data);
+      // 응답 안의 모든 S3 URL을 정규식으로 찾고, file_key 추출 → 매핑 lookup
+      s=s.replace(/https:\/\/prod-files-secure\.s3\.amazonaws\.com\/[^"\s<>]+/g,function(url){
+        var m=url.match(/\.amazonaws\.com\/([^?\\]+)/);
+        if(!m)return url;
+        var key=m[1].replace(/\\u002F/g,"/");
+        return __a[key]||url;
+      });
+      return JSON.parse(s);
+    }catch(e){return data;}
+  }
+  function callMisiso(method,path,body){
+    return _f("https://misiso.com/api/notion/deploy-proxy",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({deployKey:__k,path:path,method:method,body:body})
+    }).then(function(r){
+      var status=r.status;
+      return r.json().then(function(data){return {status:status,data:patchUrls(data)};});
+    });
+  }
+  // preload pattern — 페이지 로드와 병렬로 정적 fetch 호출 미리 시작
+  var __preloadCache={};
+  if(__preload){
+    for(var i=0;i<__preload.length;i++){
+      (function(c){
+        var key=c.method+":"+c.path+":"+(c.body?JSON.stringify(c.body):"");
+        __preloadCache[key]=callMisiso(c.method,c.path,c.body);
+      })(__preload[i]);
+    }
+  }
+  window.fetch=function(url,opts){
+    var u=typeof url==="string"?url:String(url);
+    if(!u.startsWith("/api/notion/"))return _f.apply(this,arguments);
+    var path=u.slice("/api/notion".length);
+    var method=(opts&&opts.method)||"GET";
+    var body;
+    try{body=opts&&opts.body?JSON.parse(opts.body):undefined;}catch(e){body=opts&&opts.body;}
+    var ck=method+":"+path+":"+(body?JSON.stringify(body):"");
+    var promise=__preloadCache[ck];
+    if(promise){delete __preloadCache[ck];}
+    else{promise=callMisiso(method,path,body);}
+    return promise.then(function(res){
+      return new Response(JSON.stringify(res.data),{
+        status:res.status,
+        headers:{"Content-Type":"application/json"}
+      });
+    });
+  };
+})();
+</script>
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://misiso.com" crossorigin/>
+<meta property="og:title" content="다다함 한약. 약침 치료 후기"/>
+<meta property="og:description" content="치료 후 몸의 변화와 만족도를 확인하기 위한 짧은 설문입니다."/>
+<title>다다함 한약. 약침 치료 후기</title>
+<meta name="description" content="치료 후 몸의 변화와 만족도를 확인하기 위한 짧은 설문입니다."/>
+<meta property="og:image" content="https://dadaham7510-cyber.github.io/dadaham-KMD-review/og-image-00q9q9ed.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://dadaham7510-cyber.github.io/dadaham-KMD-review/og-image-00q9q9ed.png"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2032%2032'%3E%3Crect%20width%3D'32'%20height%3D'32'%20rx%3D'6'%20fill%3D'%2310b981'%2F%3E%3Ctext%20x%3D'16'%20y%3D'22'%20text-anchor%3D'middle'%20font-size%3D'18'%20fill%3D'white'%20font-family%3D'sans-serif'%3E%EB%8B%A4%3C%2Ftext%3E%3C%2Fsvg%3E"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root {
+  --bg: #f6f8f5;
+  --card: #ffffff;
+  --text: #1f2a24;
+  --muted: #6b756f;
+  --line: #dfe7e1;
+  --green: #10b981;
+  --green-dark: #047857;
+  --green-soft: #dff7ec;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --shadow: 0 20px 60px rgba(31, 42, 36, 0.10);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.16), transparent 34rem),
+    linear-gradient(180deg, #fbfdfb 0%, var(--bg) 100%);
+  color: var(--text);
+}
+
+.app {
+  min-height: 100vh;
+  padding: 32px 18px 56px;
+}
+
+.container {
+  width: min(760px, 100%);
+  margin: 0 auto;
+}
+
+.hero {
+  margin-bottom: 22px;
+  padding: 28px;
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.brand {
+  margin: 0 0 10px;
+  color: var(--green-dark);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+h1 {
+  margin: 0 0 12px;
+  font-size: clamp(28px, 6vw, 42px);
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+}
+
+.lead {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.notice {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.form-card {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.progress-wrap {
+  margin-bottom: 22px;
+}
+
+.progress-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.progress-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf2ee;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--green), #34d399);
+  transition: width 0.25s ease;
+}
+
+.question {
+  padding: 18px 0;
+  border-top: 1px solid #edf2ee;
+}
+
+.question:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.required {
+  color: var(--red);
+}
+
+.help {
+  margin: -4px 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+input:not([type="checkbox"]),
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fbfdfb;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+input:not([type="checkbox"]) {
+  height: 48px;
+  padding: 0 14px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fbfdfb;
+  color: var(--text);
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.checkbox-row input {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  accent-color: var(--green);
+  flex: 0 0 auto;
+}
+
+.checkbox-text {
+  font-size: 14px;
+  color: var(--text);
+}
+
+textarea {
+  min-height: 112px;
+  padding: 14px;
+  resize: vertical;
+  line-height: 1.65;
+}
+
+input:not([type="checkbox"]):focus,
+textarea:focus {
+  border-color: rgba(16, 185, 129, 0.8);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  gap: 6px;
+}
+
+.score-button {
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfdfb;
+  color: var(--muted);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.score-button:hover {
+  border-color: var(--green);
+  color: var(--green-dark);
+}
+
+.score-button.active {
+  border-color: var(--green);
+  background: var(--green);
+  color: white;
+}
+
+.score-caption {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.submit {
+  flex: 1;
+  height: 54px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 14px 32px rgba(16, 185, 129, 0.28);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.reset {
+  height: 54px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: white;
+  color: var(--muted);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.message {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.message.success {
+  background: var(--green-soft);
+  color: var(--green-dark);
+}
+
+.message.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.footer {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .app {
+    padding: 18px 12px 42px;
+  }
+
+  .hero,
+  .form-card {
+    border-radius: 22px;
+    padding: 20px;
+  }
+
+  .score-row {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .submit,
+  .reset {
+    width: 100%;
+  }
+}
+</style>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script>if(window.Babel)Babel.disableScriptTags=true;</script>
+</head><body><main class="app">
+  <div class="container">
+    <section class="hero">
+      <p class="brand">다다함 한방내과 한의원</p>
+      <div class="badge">🌿 치료 후기 설문</div>
+      <h1>치료 후 몸의 변화 기록</h1>
+      <p class="lead">치료를 진행하시느라 고생 많으셨습니다. 치료 종류와 횟수를 입력하신 등, 몸의 변화와 치료 만족도를 편하게 작성해주세요. 이후 관리 방향을 더 잘 안내드리기 위한 설문입니다.</p>
+      <div class="notice">0점은 전혀 불편하지 않음, 10점은 매우 불편함 또는 매우 만족함 기준입니다.</div>
+    </section>
+
+    <form class="form-card" id="survey-form">
+      <div class="progress-wrap" aria-label="필수 문항 작성 진행률">
+        <div class="progress-top">
+          <span>필수 문항 작성</span>
+          <span id="progress-count">0/10</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <section class="question">
+        <label class="label" for="patientName">성함 <span class="required">*</span></label>
+        <p class="help">확인을 위해 성함 또는 식별 가능한 이름을 적어주세요.</p>
+        <input id="patientName" data-field="patientName" type="text" placeholder="예: 홍길동" autocomplete="name">
+      </section>
+
+      <section class="question">
+        <label class="label" for="treatmentType">치료 종류 <span class="required">*</span></label>
+        <p class="help">예: 한약, 약침, 한약 + 약침 등 해당 치료를 직접 입력해주세요.</p>
+        <input id="treatmentType" data-field="treatmentType" type="text" placeholder="예: 한약 / 약침 / 한약 + 약침">
+      </section>
+
+      <section class="question">
+        <label class="label" for="treatmentCount">치료/복용 횟수 <span class="required">*</span></label>
+        <p class="help">예: 한약 3회/6회, 약침 12회/24회 중 몇 회 완료 등 실제 진행 횟수를 입력해주세요.</p>
+        <input id="treatmentCount" data-field="treatmentCount" type="text" placeholder="예: 한약 3회 완료, 약침 12회 완료">
+      </section>
+
+      <section class="question">
+        <label class="label" for="reviewTiming">후기 시점 <span class="required">*</span></label>
+        <p class="help">예: 중간 점검, 종료 후기, 추가 치료 전 점검</p>
+        <input id="reviewTiming" data-field="reviewTiming" type="text" placeholder="예: 종료 후기">
+      </section>
+
+      <section class="question">
+        <label class="label" for="startReason">1. 처음 치료를 시작한 증상이나 고민은 무엇이었나요? <span class="required">*</span></label>
+        <p class="help">예: 피로, 수면, 소화, 생리, 통증, 기침/가래, 체중, 면역력, 스트레스 등</p>
+        <textarea id="startReason" data-field="startReason" placeholder="처음 내원하셨을 때 가장 불편했던 점을 적어주세요."></textarea>
+      </section>
+
+      <section class="question">
+        <span class="label">2. 치료 전 불편감은 0~10점 중 몇 점이었나요? <span class="required">*</span></span>
+        <div class="score-row" id="score-beforeScore"></div>
+        <div class="score-caption"><span>0 전혀 불편하지 않음</span><span>10 매우 불편함</span></div>
+      </section>
+
+      <section class="question">
+        <span class="label">3. 현재 불편감은 0~10점 중 몇 점인가요? <span class="required">*</span></span>
+        <div class="score-row" id="score-afterScore"></div>
+        <div class="score-caption"><span>0 전혀 불편하지 않음</span><span>10 매우 불편함</span></div>
+      </section>
+
+      <section class="question">
+        <label class="label" for="changes">4. 치료 후 좋아졌다고 느낀 변화는 무엇인가요? <span class="required">*</span></label>
+        <p class="help">몸에서 실제로 느낀 변화를 자유롭게 적어주세요.</p>
+        <textarea id="changes" data-field="changes" placeholder="예: 피로가 줄었다, 잠이 좋아졌다, 소화가 편해졌다 등"></textarea>
+      </section>
+
+      <section class="question">
+        <label class="label" for="remaining">5. 아직 남아있는 불편감은 무엇인가요?</label>
+        <textarea id="remaining" data-field="remaining" placeholder="없다면 '없음'이라고 적어주세요."></textarea>
+      </section>
+
+      <section class="question">
+        <label class="label" for="inconvenience">6. 치료 과정 중 불편했던 점이 있었나요?</label>
+        <p class="help">예: 맛, 복용 시간, 시술 통증, 멍, 소화불편, 대변 변화 등</p>
+        <textarea id="inconvenience" data-field="inconvenience" placeholder="없다면 '없음'이라고 적어주세요."></textarea>
+      </section>
+
+      <section class="question">
+        <span class="label">7. 이번 치료의 전체 만족도는 0~10점 중 몇 점인가요? <span class="required">*</span></span>
+        <div class="score-row" id="score-satisfaction"></div>
+        <div class="score-caption"><span>0 전혀 만족하지 않음</span><span>10 매우 만족함</span></div>
+      </section>
+
+      <section class="question">
+        <label class="label" for="continuationPlan">8. 치료 효과를 유지하기 위해 앞으로 어떤 관리가 필요하다고 느끼시나요? <span class="required">*</span></label>
+        <p class="help">예: 치료를 조금 더 이어가기, 생활관리 꾸준히 하기, 식사/수면/운동 조절하기, 정기 점검 받기 등</p>
+        <textarea id="continuationPlan" data-field="continuationPlan" placeholder="앞으로 치료나 생활관리에서 필요하다고 느끼는 점을 적어주세요."></textarea>
+      </section>
+
+      <section class="question">
+        <span class="label">9. 익명 후기 활용에 동의하시나요?</span>
+        <p class="help">작성해주신 후기는 개인정보를 제거하고 치료 경험이 과장되지 않도록 문장을 다듬은 뒤, 홈페이지 또는 안내 자료에 익명 후기 형태로 활용될 수 있습니다. 동의하지 않으셔도 진료 및 이후 관리에는 불이익이 없습니다.</p>
+        <label class="checkbox-row" for="publicationConsent">
+          <input id="publicationConsent" data-field="publicationConsent" type="checkbox">
+          <span class="checkbox-text">개인정보를 제거한 익명 후기 형태로 홈페이지 또는 안내 자료에 활용하는 것에 동의합니다.</span>
+        </label>
+      </section>
+
+      <section class="question">
+        <label class="label" for="review">자유 후기</label>
+        <p class="help">좋았던 점, 아쉬웠던 점, 의료진에게 전하고 싶은 말이 있다면 적어주세요.</p>
+        <textarea id="review" data-field="review" placeholder="자유롭게 남겨주세요."></textarea>
+      </section>
+
+      <div class="actions">
+        <button class="submit" type="submit" id="submit-btn" disabled>후기 제출하기</button>
+        <button class="reset" type="button" id="reset-btn">초기화</button>
+      </div>
+
+      <div id="message"></div>
+    </form>
+
+    <p class="footer">입력해주신 내용은 다다함 한방내과 한의원의 치료 경과 확인과 이후 관리 안내를 위해 사용됩니다.</p>
+  </div>
+</main><script>
+var __np_strip_imports=function(){return{visitor:{ImportDeclaration:function(path){var src=path.node.source.value;if(src.indexOf("./")===0||src.indexOf("../")===0)path.remove();},ExportDefaultDeclaration:function(path){var decl=path.node.declaration;if(decl.type==="FunctionDeclaration"||decl.type==="ClassDeclaration"){path.replaceWith(decl);}else{path.replaceWith({type:"VariableDeclaration",kind:"var",declarations:[{type:"VariableDeclarator",id:{type:"Identifier",name:"_default"},init:decl}]});}},ExportNamedDeclaration:function(path){if(path.node.declaration){path.replaceWith(path.node.declaration);}else{path.remove();}},ExportAllDeclaration:function(path){path.remove();}}};};
+var __np_dedupe_top_consts=function(){var _s={};return{visitor:{VariableDeclaration:function(p){if(p.parent.type!=="Program")return;if(p.node.kind!=="const"&&p.node.kind!=="let")return;var kept=[];for(var i=0;i<p.node.declarations.length;i++){var d=p.node.declarations[i];var n=d.id&&d.id.type==="Identifier"?d.id.name:null;if(n&&_s[n]){}else{if(n)_s[n]=true;kept.push(d);}}if(kept.length===0){p.remove();}else{p.node.declarations=kept;}}}}};
+var __code="const DB_ID = '_NP_DB_FB2B67BD';\n\nconst NOTION_PAGES_ENDPOINT = '/api/notion/pages';\nconst SCORE_FIELDS = ['beforeScore', 'afterScore', 'satisfaction'];\nconst SCORE_MAX = 10;\nconst REQUIRED_FIELDS = [\n  'patientName',\n  'treatmentType',\n  'treatmentCount',\n  'reviewTiming',\n  'startReason',\n  'beforeScore',\n  'afterScore',\n  'changes',\n  'satisfaction',\n  'continuationPlan',\n];\n\nconst INITIAL_STATE = {\n  patientName: '',\n  treatmentType: '',\n  treatmentCount: '',\n  reviewTiming: '',\n  startReason: '',\n  beforeScore: null,\n  afterScore: null,\n  changes: '',\n  remaining: '',\n  inconvenience: '',\n  satisfaction: null,\n  continuationPlan: '',\n  publicationConsent: false,\n  review: '',\n};\n\nconst state = Object.assign({}, INITIAL_STATE);\n\nfunction buildScoreSelectors() {\n  SCORE_FIELDS.forEach(function (field) {\n    const container = document.getElementById('score-' + field);\n    if (!container) return;\n    container.innerHTML = '';\n    for (let score = 0; score <= SCORE_MAX; score += 1) {\n      const button = document.createElement('button');\n      button.type = 'button';\n      button.className = 'score-button';\n      button.textContent = String(score);\n      button.setAttribute('aria-pressed', 'false');\n      button.addEventListener('click', function () {\n        selectScore(field, score);\n      });\n      container.appendChild(button);\n    }\n  });\n}\n\nfunction selectScore(field, score) {\n  state[field] = score;\n  const container = document.getElementById('score-' + field);\n  Array.from(container.children).forEach(function (button, index) {\n    const isActive = index === score;\n    button.classList.toggle('active', isActive);\n    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');\n  });\n  clearMessage();\n  updateProgress();\n}\n\nfunction bindInputs() {\n  document.querySelectorAll('[data-field]').forEach(function (element) {\n    const field = element.dataset.field;\n    const isCheckbox = element.type === 'checkbox';\n    const eventName = isCheckbox ? 'change' : 'input';\n    element.addEventListener(eventName, function () {\n      state[field] = isCheckbox ? element.checked : element.value;\n      clearMessage();\n      updateProgress();\n    });\n  });\n}\n\nfunction countCompleted() {\n  return REQUIRED_FIELDS.filter(function (field) {\n    const value = state[field];\n    return value !== null && String(value).trim() !== '';\n  }).length;\n}\n\nfunction updateProgress() {\n  const completed = countCompleted();\n  const total = REQUIRED_FIELDS.length;\n  const percent = Math.round((completed / total) * 100);\n  document.getElementById('progress-count').textContent = completed + '/' + total;\n  document.getElementById('progress-bar').style.width = percent + '%';\n  document.getElementById('submit-btn').disabled = completed !== total;\n}\n\nfunction showMessage(type, text) {\n  const element = document.getElementById('message');\n  element.className = 'message ' + type;\n  element.textContent = text;\n}\n\nfunction clearMessage() {\n  const element = document.getElementById('message');\n  element.className = '';\n  element.textContent = '';\n}\n\nfunction richText(value) {\n  return { rich_text: [{ text: { content: value } }] };\n}\n\nfunction buildNotionPayload() {\n  return {\n    parent: { database_id: DB_ID },\n    properties: {\n      '환자명': { title: [{ text: { content: state.patientName.trim() } }] },\n      '치료 종류': richText(state.treatmentType.trim()),\n      '치료/복용 횟수': richText(state.treatmentCount.trim()),\n      '후기 시점': richText(state.reviewTiming.trim()),\n      '치료 시작 이유': richText(state.startReason.trim()),\n      '복용 전 불편감': { number: Number(state.beforeScore) },\n      '현재 불편감': { number: Number(state.afterScore) },\n      '좋아진 변화': richText(state.changes.trim()),\n      '남은 불편감': richText(state.remaining.trim() || '없음'),\n      '복용 중 불편했던 점': richText(state.inconvenience.trim() || '없음'),\n      '전체 만족도': { number: Number(state.satisfaction) },\n      '이후 관리 계획': richText(state.continuationPlan.trim()),\n      '익명 후기 활용 동의': richText(state.publicationConsent ? '동의함' : '동의하지 않음'),\n      '자유 후기': richText(state.review.trim()),\n    },\n  };\n}\n\nasync function handleSubmit(event) {\n  event.preventDefault();\n  const submitButton = document.getElementById('submit-btn');\n  if (countCompleted() !== REQUIRED_FIELDS.length) {\n    showMessage('error', '필수 문항을 모두 작성해주세요.');\n    return;\n  }\n  submitButton.disabled = true;\n  submitButton.textContent = '저장 중...';\n  try {\n    const response = await fetch(NOTION_PAGES_ENDPOINT, {\n      method: 'POST',\n      headers: {\n        'Content-Type': 'application/json',\n        'Notion-Version': '2022-06-28',\n      },\n      body: JSON.stringify(buildNotionPayload()),\n    });\n    const result = await response.json();\n    if (!response.ok) {\n      console.warn('[Notion] 응답 저장 실패:', result);\n      throw new Error(result.message || '응답 저장에 실패했습니다.');\n    }\n    resetForm();\n    showMessage('success', '후기가 정상적으로 저장되었습니다. 소중한 답변 감사합니다.');\n  } catch (error) {\n    console.warn('[Survey] 제출 실패:', error.message);\n    showMessage('error', '저장 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.');\n  } finally {\n    submitButton.textContent = '후기 제출하기';\n    updateProgress();\n  }\n}\n\nfunction resetForm() {\n  Object.assign(state, INITIAL_STATE);\n  document.querySelectorAll('[data-field]').forEach(function (element) {\n    if (element.type === 'checkbox') {\n      element.checked = false;\n    } else {\n      element.value = '';\n    }\n  });\n  SCORE_FIELDS.forEach(function (field) {\n    const container = document.getElementById('score-' + field);\n    Array.from(container.children).forEach(function (button) {\n      button.classList.remove('active');\n      button.setAttribute('aria-pressed', 'false');\n    });\n  });\n  updateProgress();\n}\n\nfunction handleReset() {\n  resetForm();\n  clearMessage();\n}\n\nfunction init() {\n  buildScoreSelectors();\n  bindInputs();\n  document.getElementById('survey-form').addEventListener('submit', handleSubmit);\n  document.getElementById('reset-btn').addEventListener('click', handleReset);\n  updateProgress();\n}\n\nif (document.readyState === 'loading') {\n  document.addEventListener('DOMContentLoaded', init);\n} else {\n  init();\n}";
+try{var __result=Babel.transform(__code,{filename:"app.ts",presets:["typescript"],plugins:[__np_strip_imports,__np_dedupe_top_consts],generatorOpts:{jsescOption:{minimal:true}}});try{eval(__result.code);}catch(runErr){console.error("[user code runtime] "+(runErr.message||runErr)+"\n"+(runErr.stack||""));}}catch(transErr){var lm=(transErr.message||"").match(/\((\d+):(\d+)\)/);var ln=lm?parseInt(lm[1],10):0;var cx="";if(ln>0){var ls=__code.split("\n");var s=Math.max(0,ln-3),e=Math.min(ls.length,ln+2);cx="\n--- 사용자 코드 주변 ---\n"+ls.slice(s,e).map(function(l,i){return (s+i+1)+": "+l;}).join("\n");}console.error("[Babel transform 실패] "+(transErr.message||transErr)+cx);}
+</script>
+</body></html>
